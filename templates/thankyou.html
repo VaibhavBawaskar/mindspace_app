@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thank You — Mind Space</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+  <style>
+    /* ── Light Mode / Grey-White Theme ── */
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --accent: #6366f1;
+      --text: #1e293b;
+      --muted: #64748b;
+      --green: #10b981;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      font-family: 'Segoe UI', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Entrance Animation ── */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ty-card {
+      max-width: 500px; margin: 2rem auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.5rem;
+      text-align: center; padding: 3rem 2.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+
+      /* Apply Animation */
+      animation: slideUp 0.8s ease-out forwards;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    /* ── Floating Margin Effect on Hover ── */
+    .ty-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+    }
+
+    .check-circle {
+      width: 80px; height: 80px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem; margin: 0 auto 1.5rem;
+      color: var(--green);
+      transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .ty-card:hover .check-circle {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    h3 { font-weight: 800; color: #0f172a; }
+    p { color: var(--muted); font-size: .95rem; line-height: 1.5; }
+
+    .pill {
+      background: rgba(16, 185, 129, 0.1); color: var(--green);
+      font-size: .75rem; font-weight: 700; text-transform: uppercase;
+      padding: .4rem 1rem; border-radius: 999px;
+      display: inline-block; margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Steps List with Delay ── */
+    .steps {
+      text-align: left;
+      margin: 2rem 0;
+      background: #fdfdfd;
+      border-radius: 1rem;
+      padding: 0.5rem;
+      border: 1px solid #f1f5f9;
+    }
+
+    .step {
+      display: flex; gap: 1rem; align-items: center;
+      padding: 0.85rem 1rem; border-bottom: 1px solid #f1f5f9; font-size: .9rem;
+      transition: background 0.2s ease;
+    }
+
+    .step:hover {
+      background: #f8fafc;
+    }
+
+    .step:last-child { border: none; }
+
+    .step-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #f1f5f9; display: flex; align-items: center;
+      justify-content: center; font-size: .85rem; flex-shrink: 0;
+      font-weight: bold;
+    }
+
+    .step-icon.done { background: var(--green); color: #fff; }
+    .step-info strong { color: #334155; display: block; font-size: 0.9rem; }
+    .step-info span { color: var(--muted); font-size: .8rem; }
+
+    .btn-home {
+      background: #fff; border: 1.5px solid #cbd5e1;
+      color: #475569; font-weight: 600; padding: .6rem 1.5rem;
+      border-radius: .75rem; transition: all 0.2s; text-decoration: none;
+      display: inline-block; font-size: 0.9rem;
+    }
+    .btn-home:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="ty-card">
+    <div class="check-circle">✓</div>
+    <span class="pill">All Steps Completed</span>
+    <h3 class="mb-2">Success!</h3>
+    <p>Your session has been recorded. All files and transcripts have been securely uploaded to the research database.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon done">✓</div>
+        <div class="step-info">
+          <strong>Registration</strong>
+          <span>Basic details saved</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon done">✓</div>
+        <div class="step-info">
+          <strong>Research Consent</strong>
+          <span>Recorded in database</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon done">✓</div>
+        <div class="step-info">
+          <strong>Video Recording</strong>
+          <span>5s clip saved (MongoDB)</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon done">✓</div>
+        <div class="step-info">
+          <strong>Letter Reading Audio</strong>
+          <span>Hindi audio stored</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon done">✓</div>
+        <div class="step-info">
+          <strong>Scenario Response</strong>
+          <span>Audio + Transcript saved</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-icon" style="color:var(--accent); background:rgba(99,102,241,0.1);">→</div>
+        <div class="step-info">
+          <strong>Next Part</strong>
+          <span>Starting soon...</span>
+        </div>
+      </div>
+    </div>
+
+    <a href="/" class="btn-home">← Back to Login</a>
+  </div>
+</div>
+
+</body>
+</html>

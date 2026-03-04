@@ -1,0 +1,451 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audio — Letter Reading</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* बदललेले रंग - White/Grey Theme */
+      --bg: #f8fafc;           /* अतिशय फिकट राखाडी (Light Grey) */
+      --surface: #ffffff;      /* शुद्ध पांढरा (White) */
+      --border: #e2e8f0;       /* फिकट बॉर्डर */
+      --accent: #6366f1;       /* जांभळा हायलाईट */
+      --accent-glow: rgba(99,102,241,0.15);
+      --text: #1e293b;         /* गडद मजकूर (Dark Text) */
+      --muted: #64748b;        /* फिकट मजकूर */
+      --green: #10b981;        /* हिरवा रंग */
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 40px 0;
+    }
+
+    /* हलकी ग्रीड डिझाइन */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .wrap {
+      width: 100%; max-width: 480px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2rem; padding: 2rem 1.25rem;
+      position: relative; z-index: 1;
+    }
+
+    .header { text-align: center; }
+    .header h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
+    .header p  { font-size: .875rem; color: var(--muted); margin-top: .35rem; }
+
+    /* Recording Badge */
+    .rec-badge {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .75rem; font-weight: 700;
+      text-transform: uppercase;
+      padding: .4rem 1rem; border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--muted);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .rec-badge.live {
+      color: #dc2626; border-color: #fecaca;
+      background: #fef2f2;
+    }
+    .rec-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #dc2626; opacity: 0;
+    }
+    .rec-badge.live .rec-dot { opacity: 1; animation: blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .stage {
+      width: 100%; height: 220px;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .ghost-strip {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      gap: 1.5rem; opacity: .06;
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 1.5rem; color: var(--accent);
+      pointer-events: none; white-space: nowrap;
+    }
+
+    .letter-card {
+      position: absolute;
+      display: flex; align-items: center; justify-content: center;
+      width: 160px; height: 160px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.5rem;
+      font-family: 'Noto Sans Devanagari', serif;
+      font-size: 5.5rem; font-weight: 700;
+      color: var(--text);
+      /* पांढऱ्या बॅकग्राउंडवर उठून दिसण्यासाठी सावली */
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      transition: all .42s cubic-bezier(.4,0,.2,1);
+    }
+    .letter-card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow), 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    /* ... बाकीचे ॲनिमेशन (enter/exit) तसेच राहतील ... */
+    .letter-card.enter-from-right { transform: translateX(120%) scale(.85); opacity: 0; }
+    .letter-card.center { transform: translateX(0) scale(1); opacity: 1; }
+    .letter-card.exit-to-left { transform: translateX(-120%) scale(.85); opacity: 0; }
+
+    .ring-wrap {
+      position: absolute; width: 190px; height: 190px;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+    }
+    .ring-wrap svg { transform: rotate(-90deg); }
+    #ringTrack { stroke: #e2e8f0; }
+    #ringFill  { stroke: var(--accent); stroke-dasharray: 502; stroke-dashoffset: 502; }
+
+    .dots { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: center; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+    .dot.done { background: var(--green); }
+    .dot.active { background: var(--accent); transform: scale(1.3); }
+
+    .counter { font-size: .85rem; font-weight: 600; color: var(--muted); }
+
+    .btn-start {
+      background: var(--accent); border: none; color: #fff;
+      font-weight: 700; font-size: 1rem;
+      padding: .8rem 3.5rem; border-radius: .75rem; cursor: pointer;
+      box-shadow: 0 4px 6px -1px rgba(99,102,241, 0.4);
+    }
+    .instruction {
+      text-align: center; font-size: .85rem; color: var(--muted);
+      border: 1px solid var(--border); border-radius: .75rem;
+      padding: .8rem; background: #fff; width: 100%;
+    }
+    /* ── Upload & Done Section Design ── */
+    #doneSection {
+      display: none; /* सुरुवातीला लपवलेले */
+      width: 100%;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 10px;
+      padding: 1.5rem;
+      background: #f1f5f9; /* हलका राखाडी बॉक्स */
+      border-radius: 1rem;
+      border: 1px dashed #cbd5e1;
+    }
+
+    .done-banner {
+      background: #dcfce7; /* फिकट हिरवा */
+      border: 1px solid #86efac;
+      border-radius: .75rem;
+      padding: .75rem 1.5rem;
+      text-align: center;
+      color: #166534; /* गडद हिरवा मजकूर */
+      font-weight: 700;
+      font-size: 0.95rem;
+      width: 100%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .btn-upload {
+      background: #059669; /* मुख्य हिरवा रंग */
+      border: none;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 0.9rem 3rem;
+      border-radius: .75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); /* हिरवी सावली */
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .btn-upload:hover {
+      background: #047857;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(5, 150, 105, 0.4);
+    }
+
+    .btn-upload:active {
+      transform: translateY(0);
+    }
+
+    .btn-upload:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .upload-status {
+      font-size: .85rem;
+      color: #475569;
+      font-weight: 500;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <h2>🎙️ Read Each Letter</h2>
+    <p>Letters appear one by one. Speak each one clearly as it slides in.</p>
+  </div>
+
+  <!-- REC badge -->
+  <div class="rec-badge" id="recBadge">
+    <span class="rec-dot"></span> Recording
+  </div>
+
+  <!-- Stage -->
+  <div class="stage" id="stage">
+    <!-- Ghost strip (all letters very faint in background) -->
+    <div class="ghost-strip">
+      अ इ उ ए ओ अं अः ट श ष स च य र ल थ व ड ञ द ण न म ह ख
+    </div>
+
+    <!-- Ring progress -->
+    <div class="ring-wrap">
+      <svg width="184" height="184" viewBox="0 0 184 184" fill="none">
+        <circle id="ringTrack" cx="92" cy="92" r="80" stroke-width="3" fill="none"/>
+        <circle id="ringFill"  cx="92" cy="92" r="80" stroke-width="3" fill="none"
+                stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Letter card (single, reused with animation) -->
+    <div class="letter-card enter-from-right" id="letterCard">—</div>
+  </div>
+
+  <!-- Dot progress -->
+  <div class="dots" id="dots"></div>
+
+  <!-- Counter -->
+  <div class="counter" id="counter">— / 25</div>
+
+  <!-- Instruction -->
+  <div class="instruction" id="instruction">
+    Press <strong>Start</strong> to begin. Letters will slide in automatically every 2.5 seconds.
+  </div>
+
+  <!-- Start button -->
+  <button class="btn-start" id="startBtn">▶ Start Recording</button>
+
+  <!-- Done banner + upload (hidden initially) -->
+  <div id="doneSection" style="display:none; width:100%; display:none; flex-direction:column; align-items:center; gap:.75rem;">
+    <div class="done-banner">✅ All 25 letters recorded!</div>
+    <button class="btn-upload" id="uploadBtn">Upload &amp; Continue →</button>
+    <div class="upload-status" id="uploadStatus"></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+  const LETTERS = [
+    "अ","इ","उ","ए","ओ",
+    "अं","अः","ट","श","ष",
+    "स","च","य","र","ल",
+    "थ","व","ड","ञ","द",
+    "ण","न","म","ह","ख"
+  ];
+  const SEC_PER_LETTER = 2.5;
+  const RING_CIRCUM    = 2 * Math.PI * 80;   // ≈ 502.65
+
+  let stream      = null;
+  let mediaRec    = null;
+  let chunks      = [];
+  let audioBlob   = null;
+  let currentIdx  = -1;
+  let letterTimer = null;
+  let ringTimer   = null;
+
+  const card         = document.getElementById("letterCard");
+  const recBadge     = document.getElementById("recBadge");
+  const ringFill     = document.getElementById("ringFill");
+  const dotsWrap     = document.getElementById("dots");
+  const counter      = document.getElementById("counter");
+  const instruction  = document.getElementById("instruction");
+  const startBtn     = document.getElementById("startBtn");
+  const doneSection  = document.getElementById("doneSection");
+  const uploadBtn    = document.getElementById("uploadBtn");
+  const uploadStatus = document.getElementById("uploadStatus");
+
+  // ── Build dots ────────────────────────────────────────
+  LETTERS.forEach((_, i) => {
+    const d = document.createElement("div");
+    d.className = "dot";
+    d.id = `dot-${i}`;
+    dotsWrap.appendChild(d);
+  });
+
+  // ── Mic ───────────────────────────────────────────────
+  async function getMic() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      startBtn.disabled = false;
+    } catch {
+      instruction.textContent = "⚠️ Microphone access denied. Please allow it and reload.";
+    }
+  }
+
+  // ── Start full session ────────────────────────────────
+  async function startSession() {
+    startBtn.disabled = true;
+
+    // Start MediaRecorder
+    chunks = [];
+    const mime = ["audio/webm;codecs=opus","audio/webm","audio/ogg"]
+                   .find(m => MediaRecorder.isTypeSupported(m)) || "";
+    mediaRec = new MediaRecorder(stream, mime ? {mimeType: mime} : {});
+    mediaRec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    mediaRec.onstop = () => {
+      audioBlob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
+      showDone();
+    };
+    mediaRec.start(300);
+
+    recBadge.classList.add("live");
+    instruction.textContent = "Speak each letter as it appears. Recording in progress…";
+
+    // Kick off letter sequence
+    showLetter(0);
+  }
+
+  // ── Show one letter with slide animation ─────────────
+  function showLetter(index) {
+    currentIdx = index;
+
+    // Update dots
+    LETTERS.forEach((_, i) => {
+      const d = document.getElementById(`dot-${i}`);
+      d.className = "dot" + (i < index ? " done" : i === index ? " active" : "");
+    });
+    counter.textContent = `${index + 1} / ${LETTERS.length}`;
+
+    // ① Slide the OLD card out to the left
+    card.className = "letter-card exit-to-left";
+
+    setTimeout(() => {
+      // ② Instantly position new card off-screen right (no transition)
+      card.style.transition = "none";
+      card.textContent = LETTERS[index];
+      card.className   = "letter-card enter-from-right";
+
+      // Force reflow so the browser registers the starting position
+      void card.offsetHeight;
+
+      // ③ Transition back on
+      card.style.transition = "";
+      card.className = "letter-card center active";
+    }, 420);   // match exit transition duration
+
+    // ── Ring countdown ────────────────────────────────
+    clearInterval(ringTimer);
+    const totalMs = SEC_PER_LETTER * 1000;
+    const start   = Date.now();
+    ringFill.style.strokeDashoffset = RING_CIRCUM;
+
+    ringTimer = setInterval(() => {
+      const elapsed = Date.now() - start;
+      const progress = Math.min(1, elapsed / totalMs);
+      ringFill.style.strokeDashoffset = RING_CIRCUM * (1 - progress);
+
+      if (progress >= 1) {
+        clearInterval(ringTimer);
+        advanceLetter();
+      }
+    }, 50);
+  }
+
+  function advanceLetter() {
+    clearInterval(ringTimer);
+    // Mark current dot done
+    const d = document.getElementById(`dot-${currentIdx}`);
+    if (d) d.className = "dot done";
+
+    const next = currentIdx + 1;
+    if (next < LETTERS.length) {
+      showLetter(next);
+    } else {
+      // All done — stop recording
+      card.className  = "letter-card center";
+      card.textContent = "✓";
+      card.style.color = "#34d399";
+      card.style.fontSize = "4rem";
+      recBadge.classList.remove("live");
+      ringFill.style.strokeDashoffset = 0;
+      counter.textContent = `${LETTERS.length} / ${LETTERS.length}`;
+      mediaRec.stop();
+    }
+  }
+
+  // ── Show done section ─────────────────────────────────
+  function showDone() {
+    instruction.textContent = "All done! Review and upload your recording.";
+    doneSection.style.display    = "flex";
+    doneSection.style.removeProperty("display");
+    doneSection.style.display    = "flex";
+  }
+
+  // ── Upload ────────────────────────────────────────────
+  async function uploadAudio() {
+    uploadBtn.disabled      = true;
+    uploadStatus.textContent = "⏳ Uploading…";
+
+    const form = new FormData();
+    form.append("audio", audioBlob, "letters_all.webm");
+
+    try {
+      const res  = await fetch("/upload-audio-letters", { method: "POST", body: form });
+      const data = await res.json();
+      if (data.ok) {
+        uploadStatus.textContent = "✅ Recorded! Moving to next step…";
+        setTimeout(() => { window.location.href = "/audio-scenario"; }, 1400);
+      } else {
+        uploadStatus.textContent = "❌ " + (data.error || "Upload failed");
+        uploadBtn.disabled = false;
+      }
+    } catch {
+      uploadStatus.textContent = "❌ Network error. Try again.";
+      uploadBtn.disabled = false;
+    }
+  }
+
+  // ── Wire up ───────────────────────────────────────────
+  startBtn.addEventListener("click", startSession);
+  uploadBtn.addEventListener("click", uploadAudio);
+
+  // ── Boot ──────────────────────────────────────────────
+  startBtn.disabled = true;
+  getMic();
+</script>
+</body>
+</html>

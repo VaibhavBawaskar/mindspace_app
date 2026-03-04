@@ -1,0 +1,40 @@
+# ──────────────────────────────────────────────────────
+#  Mind Space — Python dependencies (version-pinned)
+#  Generated: 2026-02-23
+#  Python  : 3.x  (tested with 3.11+)
+# ──────────────────────────────────────────────────────
+
+# Web framework
+Flask==3.0.0
+Werkzeug==3.1.6
+Jinja2==3.1.6
+MarkupSafe==3.0.3
+itsdangerous==2.2.0
+click==8.3.1
+blinker==1.9.0
+
+# MongoDB
+pymongo==4.6.1
+Flask-PyMongo==2.3.0
+dnspython==2.8.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# HTTP / networking
+requests==2.31.0
+urllib3==2.6.3
+certifi==2026.1.4
+idna==3.11
+charset-normalizer==3.4.4
+
+# Windows console colours (auto-installed on Windows)
+colorama==0.4.6
+
+
+Flask
+flask-pymongo
+python-dotenv
+cloudinary
+gridfs
+gunicorn
