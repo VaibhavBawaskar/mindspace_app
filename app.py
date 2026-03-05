@@ -1,10 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, Response
 from flask_pymongo import PyMongo
+import certifi # पहिली ओळ
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 import gridfs
 import os
 from datetime import datetime
+
+ca = certifi.where()
 
 import cloudinary
 import cloudinary.uploader
@@ -17,10 +20,10 @@ app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key-change-in-production")
 
 # MongoDB configuration
 app.config["MONGO_URI"] = os.getenv(
-    "MONGO_URI", "mongodb://localhost:27017/mindspace"
+    "MONGO_URI", "mongodb+srv://mindspace:Mindspace2002@cluster0.h3tnstr.mongodb.net/mindspace?retryWrites=true&w=majority"
 )
 
-mongo = PyMongo(app)
+mongo = PyMongo(app, tlsCAFile=ca)
 print("Mongo URI:", app.config["MONGO_URI"])
 print("Database Name:", mongo.db.name)
 
