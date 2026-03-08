@@ -1,11 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, Response
 from flask_pymongo import PyMongo
+from werkzeug.security import generate_password_hash, check_password_hash
 import certifi # पहिली ओळ
 from bson.objectid import ObjectId
 from dotenv import load_dotenv
 import gridfs
+import google.generativeai as genai
 import os
+import time # Sarvat var import madhe add kar
 from datetime import datetime
+import requests # हे फाईलच्या सर्वात वर 'import' मध्ये असल्याची खात्री करा
+# API URL नीट काम करतेय का हे चेक करण्यासाठी
+
 
 ca = certifi.where()
 
@@ -54,39 +60,64 @@ def upload_audio():
     return "Uploaded Successfully"
 
 
+
 @app.route("/", methods=["GET"])
 def index():
+    user_id = session.get("user_id")
+    # डेटाबेसमधून युजरचे नाव मिळवा
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)}) if user_id else None
+    user_name = user.get("first_name", "User") if user else "Guest"
     return render_template("index.html")
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email', "").strip().lower()
+        password_candidate = request.form.get('password', "")
 
+        user = mongo.db.users.find_one({"email": email})
 
+        if user:
+            if check_password_hash(user.get('password', ""), password_candidate):
+                # युजरचा ID सेशनमध्ये सेव्ह करा
+                session["user_id"] = str(user["_id"])
+                flash("Login Successful!", "success")
+                return redirect(url_for("consent"))
+            else:
+                flash("Invalid password. Please try again.", "danger")
+                return render_template('login.html')
+        else:
+            flash("Login Successful!", "warning")
+            return redirect(url_for('thankyou'))
+
+    return render_template('login.html')
+# --- SUBMIT ROUTE (Registration साठी) ---
 @app.route("/submit", methods=["POST"])
 def submit():
     first_name = request.form.get("first_name", "").strip()
     last_name  = request.form.get("last_name", "").strip()
-    email      = request.form.get("email", "").strip()
+    email      = request.form.get("email", "").strip().lower()
     phone      = request.form.get("phone", "").strip()
     dob        = request.form.get("dob", "").strip()
     gender     = request.form.get("gender", "").strip()
     city       = request.form.get("city", "").strip()
+    password   = request.form.get("password")
 
-    # Basic validation
-    errors = []
-    if not first_name:
-        errors.append("First name is required.")
-    if not last_name:
-        errors.append("Last name is required.")
-    if not email:
-        errors.append("Email is required.")
-    if not phone:
-        errors.append("Phone number is required.")
-
-    if errors:
-        for error in errors:
-            flash(error, "danger")
+    # १. बेसिक व्हॅलिडेशन
+    if not first_name or not email or not password:
+        flash("Required fields are missing.", "danger")
         return redirect(url_for("index"))
 
-    # Store form data in session and go to consent screen (do NOT save to DB yet)
-    session["pending_user"] = {
+    # २. युजर आधीच अस्तित्वात आहे का ते तपासा
+    existing_user = mongo.db.users.find_one({"email": email})
+    if existing_user:
+        flash("Account already created with this email. Please login.", "warning")
+        return redirect(url_for("login"))
+
+    # ३. पासवर्ड हॅश करा
+    hashed_password = generate_password_hash(password)
+
+    # ४. डेटाबेसमध्ये युजर सेव्ह करा (आता थेट सेव्ह करूया)
+    user_data = {
         "first_name" : first_name,
         "last_name"  : last_name,
         "full_name"  : f"{first_name} {last_name}",
@@ -95,44 +126,78 @@ def submit():
         "dob"        : dob,
         "gender"     : gender,
         "city"       : city,
+        "password"   : hashed_password,
+        "consented"  : False,  # सुरुवातीला False ठेवा
+        "created_at" : datetime.utcnow()
     }
-    return redirect(url_for("consent"))
 
+    mongo.db.users.insert_one(user_data)
 
+    flash("Registration successful! Please login to continue.", "success")
+
+    # ५. रजिस्टर झाल्यावर 'Login' पेजवर पाठवा
+    return redirect(url_for("login"))
 # ── Consent screen ────────────────────────────────────────
 @app.route("/consent", methods=["GET"])
 def consent():
-    user = session.get("pending_user")
+    # १. लॉगिन असलेल्या युजरचा ID सेशनमधून मिळवा
+    user_id = session.get("user_id")
+
+    # २. जर युजर लॉगिन नसेल, तर त्याला लॉगिन पेजवर पाठवा
+    if not user_id:
+        flash("Please login to access the consent page.", "warning")
+        return redirect(url_for("login"))
+
+    # ३. डेटाबेसमधून त्या युजरची पूर्ण माहिती मिळवा
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+
+    # ४. जर युजर डेटाबेसमध्ये सापडला नाही (Session करप्ट असल्यास)
     if not user:
-        flash("Session expired. Please fill the form again.", "warning")
+        session.clear()
+        flash("User not found. Please register again.", "danger")
         return redirect(url_for("index"))
+
+    # ५. युजरची माहिती 'consent.html' ला पाठवा
     return render_template("consent.html", user=user)
 
-
-@app.route("/agree", methods=["POST"])
+@app.route("/agree", methods=["GET", "POST"])
 def agree():
+    # १. जर कुणी थेट URL वरून येण्याचा प्रयत्न केला तर त्याला कन्सेंट पेजवर पाठवा
+    if request.method == "GET":
+        return redirect(url_for("consent"))
+
+    # २. लॉगिन असलेल्या युजरचा ID सेशनमधून मिळवा
+    user_id = session.get("user_id")
     agreed = request.form.get("consent_check")
-    user   = session.get("pending_user")
 
-    if not user:
-        flash("Session expired. Please fill the form again.", "warning")
-        return redirect(url_for("index"))
+    # ३. युजर लॉगिन नसेल (Session Expired) तर लॉगिनला पाठवा
+    if not user_id:
+        flash("Session expired. Please login again.", "warning")
+        return redirect(url_for("login"))
 
+    # ४. जर चेकबॉक्स टिक केला नसेल तर परत कन्सेंटवर पाठवा
     if not agreed:
         flash("You must agree to the consent to continue.", "warning")
         return redirect(url_for("consent"))
 
-    # Save to MongoDB now that consent is given
-    user["consented"]   = True
-    user["created_at"]  = datetime.utcnow()
-    result = mongo.db.users.insert_one(user)
-    session.pop("pending_user", None)
-    # Keep user_id in session so the video can be linked to this user
-    session["user_id"] = str(result.inserted_id)
+    try:
+        # ५. डेटाबेसमधील युजरचे रेकॉर्ड अपडेट करा (नवीन इन्सर्ट न करता)
+        mongo.db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "consented": True,
+                "consent_at": datetime.utcnow()
+            }}
+        )
 
-    return redirect(url_for("next_page"))
+        flash("Consent recorded successfully!", "success")
 
+        # ६. आता युजरला पुढच्या स्टेपवर (व्हिडिओ रेकॉर्डिंग) पाठवा
+        return redirect(url_for("next_page"))
 
+    except Exception as e:
+        flash(f"Error updating consent: {str(e)}", "danger")
+        return redirect(url_for("consent"))
 # ── Camera / Video recording page ───────────────────────
 @app.route("/next")
 def next_page():
@@ -153,36 +218,51 @@ def upload_video():
     if not video_file:
         return jsonify({"error": "No video received"}), 400
 
-    # 🔵 Upload to Cloudinary
-    video_file.seek(0)
-    cloud_result = cloudinary.uploader.upload(
-        video_file,
-        resource_type="video",
-        folder="mindspace/videos"
-    )
-    cloud_url = cloud_result["secure_url"]
+    try:
+        # 1. User chi mahiti kadha (Navasathi)
+        user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+        user_name = user.get("full_name", "user").replace(" ", "_")
+        ts = int(time.time()) # Navin timestamp pratyek upload sathi
 
-    # 🔵 Upload to GridFS
-    video_file.seek(0)
-    fs = gridfs.GridFS(mongo.db)
-    file_id = fs.put(
-        video_file.read(),
-        filename=f"{user_id}_recording.webm",
-        content_type="video/webm",
-        user_id=user_id,
-        uploaded_at=datetime.utcnow(),
-    )
+        # 2. 🔵 Upload to Cloudinary (MP4 format ani User Name sobat)
+        video_file.seek(0)
+        cloud_result = cloudinary.uploader.upload(
+            video_file,
+            resource_type="video",
+            folder="mindspace/videos",
+            public_id=f"video_{user_name}_{ts}", # Example: video_Rahul_Patil_1741452000
+            format="mp4",                         # Video sathi MP4 best aahe
+            unique_filename=False,
+            use_filename=True
+        )
+        cloud_url = cloud_result["secure_url"]
 
-    mongo.db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": {
-            "video_file_id": str(file_id),
-            "video_cloud_url": cloud_url,
-            "video_uploaded_at": datetime.utcnow()
-        }}
-    )
+        # 3. 🔵 Upload to GridFS (Backup sathi MongoDB madhe)
+        video_file.seek(0)
+        fs = gridfs.GridFS(mongo.db)
+        file_id = fs.put(
+            video_file.read(),
+            filename=f"{user_name}_video_{ts}.mp4",
+            content_type="video/mp4",
+            user_id=user_id,
+            uploaded_at=datetime.utcnow(),
+        )
 
-    return jsonify({"ok": True, "file_id": str(file_id)})
+        # 4. 🔵 MongoDB Update (User record madhe links save karne)
+        mongo.db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "video_file_id": str(file_id),
+                "video_cloud_url": cloud_url,
+                "video_uploaded_at": datetime.utcnow()
+            }}
+        )
+
+        return jsonify({"ok": True, "file_id": str(file_id), "url": cloud_url})
+
+    except Exception as e:
+        print(f"VIDEO UPLOAD ERROR: {str(e)}")
+        return jsonify({"error": "Internal Server Error"}), 500
 
 @app.route("/audio-letters")
 def audio_letters():
@@ -193,34 +273,43 @@ def audio_letters():
     return render_template("audio_letters.html")
 
 # ── Audio letters page ──────────────────────────────────────
+import time # Sarvat var import madhe add kar
+
 @app.route("/upload-audio-letters", methods=["POST"])
 def upload_audio_letters():
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"error": "Session expired"}), 403
 
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+    user_name = user.get("full_name", "user").replace(" ", "_")
+    ts = int(time.time()) # Current Time
+
     f = request.files.get("audio")
     if not f:
         return jsonify({"error": "No audio received"}), 400
 
-    # 🔵 Upload to Cloudinary
+    # 🔵 Cloudinary Update: format="wav" add kela aahe
     f.seek(0)
     cloud_result = cloudinary.uploader.upload(
         f,
         resource_type="video",
-        folder="mindspace/audio_letters"
+        folder="mindspace/audio_letters",
+        public_id=f"letters_{user_name}_{ts}", # Nav + Timestamp
+        format="wav",                          # .wav format sathi
+        unique_filename=False,
+        use_filename=True
     )
     cloud_url = cloud_result["secure_url"]
 
-    # 🔵 Upload to GridFS
+    # --- Baki GridFS cha code same rahil ---
     f.seek(0)
     fs_letters = gridfs.GridFS(mongo.db, collection="audio_letters")
     fid = fs_letters.put(
         f.read(),
-        filename=f"{user_id}_letters_all.webm",
-        content_type="audio/webm",
+        filename=f"{user_name}_letters_{ts}.wav",
+        content_type="audio/wav",
         user_id=user_id,
-
         uploaded_at=datetime.utcnow(),
     )
 
@@ -232,7 +321,6 @@ def upload_audio_letters():
             "audio_letters_at": datetime.utcnow()
         }}
     )
-
     return jsonify({"ok": True, "file_id": str(fid)})
 # ── Audio scenario page ──────────────────────────────────────
 SCENARIOS = [
@@ -269,6 +357,10 @@ def upload_audio_scenario():
     if not user_id:
         return jsonify({"error": "Session expired"}), 403
 
+    user = mongo.db.users.find_one({"_id": ObjectId(user_id)})
+    user_name = user.get("full_name", "user").replace(" ", "_")
+    ts = int(time.time())
+
     audio_file = request.files.get("audio")
     transcript = request.form.get("transcript", "").strip()
     scenario_id = request.form.get("scenario_id", "").strip()
@@ -277,22 +369,26 @@ def upload_audio_scenario():
     if not audio_file:
         return jsonify({"error": "No audio received"}), 400
 
-    # 🔵 Upload to Cloudinary
+    # 🔵 Cloudinary Update: format="wav" add kela aahe
     audio_file.seek(0)
     cloud_result = cloudinary.uploader.upload(
         audio_file,
         resource_type="video",
-        folder="mindspace/audio_scenario"
+        folder="mindspace/audio_scenario",
+        public_id=f"scenario_{user_name}_{ts}",
+        format="wav",
+        unique_filename=False,
+        use_filename=True
     )
     cloud_url = cloud_result["secure_url"]
 
-    # 🔵 Upload to GridFS
+    # --- GridFS Logic ---
     audio_file.seek(0)
     fs_scenario = gridfs.GridFS(mongo.db, collection="audio_scenario")
     file_id = fs_scenario.put(
         audio_file.read(),
-        filename=f"{user_id}_scenario.webm",
-        content_type="audio/webm",
+        filename=f"{user_name}_scenario_{ts}.wav",
+        content_type="audio/wav",
         user_id=user_id,
         scenario_id=scenario_id,
         scenario_title=scenario_title,
@@ -487,6 +583,63 @@ def delete_user(user_id):
     flash("User deleted.", "info")
     return redirect(url_for("users"))
 
+# Gemini कॉन्फिगरेशन
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# हे बदलून पहा
+model = genai.GenerativeModel('gemini-pro')
+@app.route("/ask-ai", methods=["POST"])
+def ask_ai():
+    try:
+        # 1. Get user input and API Key
+        user_data = request.get_json(force=True)
+        user_message = user_data.get("message")
+        api_key = os.getenv("GROQ_API_KEY")
 
+        if not user_message:
+            return jsonify({"reply": "Please type something..."}), 400
+
+        # 2. Setup Groq API details
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        # 3. Create the payload with Multilingual instructions
+        payload = {
+            "model": "llama-3.3-70b-versatile",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are 'MindSpace AI', the official assistant for the MindSpace project. "
+                        "Your job is to provide info about project login, registration, and mental health features. "
+                        "CRITICAL: Always reply in the SAME LANGUAGE used by the user. "
+                        "If the user speaks Marathi, reply in Marathi. If Hindi, reply in Hindi. If English, reply in English. "
+                        "Be helpful, empathetic, and professional."
+                    )
+                },
+                {"role": "user", "content": user_message}
+            ],
+            "temperature": 0.7 # Makes the AI more natural
+        }
+
+        # 4. Make the Request
+        response = requests.post(url, headers=headers, json=payload, timeout=15)
+        response_data = response.json()
+
+        # 5. Handle Response
+        if response.status_code == 200:
+            ai_reply = response_data['choices'][0]['message']['content']
+            return jsonify({"reply": ai_reply})
+        else:
+            print(f" GROQ API ERROR: {response_data}")
+            return jsonify({"reply": "I am currently busy. Please try again later."}), 500
+
+    except Exception as e:
+        print(f" SERVER ERROR: {str(e)}")
+        return jsonify({"reply": "A technical error occurred on the server."}), 500
 if __name__ == "__main__":
     app.run(debug=True)
+
+

@@ -12,232 +12,232 @@
       --primary: #6366f1;
       --secondary: #a855f7;
       --accent: #f43f5e;
+      --bg-glass: rgba(255, 255, 255, 0.85);
     }
 
-    /* ── Animated Mesh Gradient Background ── */
     body {
-      margin: 0;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow-x: hidden;
-      background: linear-gradient(45deg, #e0e7ff, #fae8ff, #f1f5f9);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
+      margin: 0; font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(-45deg, #e0e7ff, #fae8ff, #e0f2fe, #f1f5f9);
+      background-size: 400% 400%; animation: gradientBG 15s ease infinite;
     }
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+    @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
 
-    /* ── Glassmorphism Card ── */
     .page-wrap {
-      max-width: 500px;
-      width: 90%;
-      padding: 3rem;
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 2.5rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-      text-align: center;
-      animation: slideUp 0.8s ease-out;
+      max-width: 500px; width: 92%; padding: 2.5rem;
+      background: var(--bg-glass); backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 3rem;
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.15); text-align: center;
     }
 
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(30px); }
-      to { opacity: 1; transform: translateY(0); }
+    .activity-card {
+      background: linear-gradient(135deg, #ffffff, #fdf2f8);
+      border: 2px solid #fbcfe8; border-radius: 1.5rem;
+      padding: 1.2rem; margin-bottom: 1.5rem;
+      box-shadow: 0 10px 20px rgba(244, 63, 94, 0.05);
     }
+    .activity-label { font-size: 0.75rem; font-weight: 800; color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 8px; }
+    #activity-text { font-weight: 700; color: #1e293b; font-size: 1.05rem; transition: opacity 0.3s; min-height: 1.5em; }
 
-    .heading h3 { font-weight: 800; letter-spacing: -1px; color: #1e293b; }
-    .heading p { color: #64748b; font-size: 0.9rem; margin-bottom: 2rem; }
+    .btn-shuffle { font-size: 0.75rem; color: #db2777; background: #fce7f3; text-decoration: none; font-weight: 800; padding: 6px 16px; border-radius: 30px; border: none; transition: 0.3s; display: inline-block; margin-top: 10px; }
+    .btn-shuffle:hover { background: var(--accent); color: white; transform: scale(1.05); }
 
-    /* ── Neon Viewfinder ── */
-    .viewfinder {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1/1; /* Square look is more modern */
-      background: #000;
-      border-radius: 2rem;
-      overflow: hidden;
-      box-shadow: 0 0 0 5px #fff, 0 20px 40px rgba(99, 102, 241, 0.2);
-      margin-bottom: 1.5rem;
-      border: 2px solid transparent;
-      transition: all 0.5s ease;
-    }
-
-    /* Recording State Border Animation */
-    .viewfinder.is-recording {
-      box-shadow: 0 0 0 5px #fff, 0 0 20px var(--accent);
-      border-color: var(--accent);
-      transform: scale(1.02);
-    }
-
+    .viewfinder { position: relative; width: 100%; aspect-ratio: 1/1; background: #000; border-radius: 2.2rem; overflow: hidden; box-shadow: 0 0 0 6px #fff, 0 25px 50px rgba(99, 102, 241, 0.2); margin-bottom: 1rem; }
     #preview { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
 
-    /* ── REC Badge ── */
-    .rec-badge {
-      position: absolute; top: 1.5rem; left: 1.5rem;
-      background: rgba(244, 63, 94, 0.9);
-      color: white; padding: 0.5rem 1rem; border-radius: 1rem;
-      font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;
-      opacity: 0; visibility: hidden; transition: 0.3s;
+    .visualizer-container {
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      height: 40px; margin-bottom: 1rem;
     }
+    .bar { width: 6px; height: 5px; background: var(--primary); border-radius: 10px; transition: height 0.1s ease; }
+
+    .rec-badge { position: absolute; top: 1.5rem; left: 1.5rem; background: rgba(244, 63, 94, 0.95); color: white; padding: 0.5rem 1.2rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 800; display: flex; align-items: center; gap: 8px; opacity: 0; visibility: hidden; z-index: 10; }
     .rec-badge.visible { opacity: 1; visibility: visible; }
+    .rec-dot { width: 10px; height: 10px; border-radius: 50%; background: white; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    .rec-dot {
-      width: 10px; height: 10px; border-radius: 50%; background: white;
-      animation: pulse 1s infinite;
-    }
-    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-
-    /* ── Floating Countdown ── */
-    #countdown-overlay {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 8rem; font-weight: 900; color: white;
-      background: rgba(99, 102, 241, 0.3);
-      opacity: 0; transition: 0.3s; pointer-events: none;
-    }
+    #countdown-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 8rem; font-weight: 900; color: white; opacity: 0; pointer-events: none; text-shadow: 0 5px 15px rgba(0,0,0,0.3); }
     #countdown-overlay.visible { opacity: 1; }
 
-    /* ── Premium Buttons ── */
-    .btn-main {
-      padding: 1rem 2rem; border-radius: 1.2rem; font-weight: 700;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border: none; width: 100%;
-    }
-
-    .btn-rec {
-      background: linear-gradient(135deg, var(--accent), #e11d48);
-      color: white; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.3);
-    }
-    .btn-rec:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(244, 63, 94, 0.4); }
-
-    .btn-submit {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-    }
-
-    .btn-retry { background: #f1f5f9; color: #64748b; margin-top: 10px; }
-
-    /* ── Progress Bar ── */
-    .progress-container { height: 10px; background: #f1f5f9; border-radius: 10px; margin: 1rem 0; overflow: hidden; }
-    .progress-fill {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
-      transition: width 0.3s linear;
-    }
-
+    .btn-main { padding: 1.1rem 2rem; border-radius: 1.5rem; font-weight: 800; border: none; width: 100%; transition: 0.3s; }
+    .btn-rec { background: linear-gradient(135deg, var(--accent), #e11d48); color: white; box-shadow: 0 10px 20px rgba(244, 63, 94, 0.2); }
+    .btn-rec:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; }
   </style>
+  {% include 'chat_bot.html' %}
 </head>
 <body>
 
 <div class="page-wrap">
-  <div class="heading">
-    <h3>Selfie Video</h3>
-    <p>Just a quick 5-second check-in!</p>
+  <div class="activity-card" id="activityBox">
+    <span class="activity-label">Activity Challenge </span>
+    <div class="d-flex align-items-center justify-content-center gap-2">
+      <p id="activity-text" class="m-0">Loading...</p>
+      <button id="speakBtn" style="border:none; background:none; cursor:pointer; font-size:1.2rem;" title="Speak activity">🔊</button>
+    </div>
+    <button class="btn-shuffle" id="shuffleBtn"> SHUFFLE NEW</button>
   </div>
 
   <div class="viewfinder" id="viewfinder">
     <video id="preview" autoplay muted playsinline></video>
-    <div class="rec-badge" id="recBadge"><div class="rec-dot"></div> RECORDING</div>
+    <div class="rec-badge" id="recBadge"><div class="rec-dot"></div> REC</div>
     <div id="countdown-overlay"></div>
   </div>
 
-  <div id="progressWrap" style="display:none;">
-    <div class="progress-container"><div class="progress-fill" id="progressBar"></div></div>
+  <div class="visualizer-container" id="visualizer">
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div>
   </div>
 
   <div id="start-group">
-    <p id="pre-status" class="small fw-bold text-primary mb-3">Initializing Camera...</p>
+    <p id="pre-status" class="small fw-bold text-muted mb-3">Initializing Camera...</p>
     <button class="btn-main btn-rec" id="startBtn" disabled>⏺ START RECORDING</button>
   </div>
 
   <div id="playback-wrap" style="display:none;">
-    <video id="playback" controls style="width:100%; border-radius:1.5rem; margin-bottom:1rem;"></video>
-    <button class="btn-main btn-submit" id="submitBtn">YES, SEND IT! 🚀</button>
-    <button class="btn-main btn-retry" id="retryBtn">Re-record</button>
+    <video id="playback" controls style="width:100%; border-radius:1.5rem; margin-bottom:1.5rem;"></video>
+    <button class="btn-main" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color:white;" id="submitBtn">UPLOAD VIDEO 🚀</button>
+    <button class="btn-main mt-2" style="background: #f1f5f9; color: #64748b;" onclick="location.reload()">RE-RECORD</button>
   </div>
 
   <div class="upload-status mt-3 fw-bold text-primary" id="uploadStatus"></div>
 </div>
 
 <script>
-  const preview = document.getElementById("preview");
-  const viewfinder = document.getElementById("viewfinder");
-  const recBadge = document.getElementById("recBadge");
-  const countdownEl = document.getElementById("countdown-overlay");
-  const startBtn = document.getElementById("startBtn");
-  const progressBar = document.getElementById("progressBar");
-  const progressWrap = document.getElementById("progressWrap");
-  const playbackWrap = document.getElementById("playback-wrap");
-  const startGroup = document.getElementById("start-group");
-  const uploadStatus = document.getElementById("uploadStatus");
+  const activities = [
+    "Smile broadly and say 'Cheese!' ",
+    "Share one thing you love about yourself! ",
+    "Count from 1 to 5 with high energy! ",
+    "Show us your 'Super Hero' pose! ",
+    "Wink at the camera and give a peace sign! ",
+    "Take a deep breath and exhale slowly... "
+  ];
 
-  let stream, mediaRec, chunks = [], videoBlob;
-  const DURATION = 5;
+  let videoBlob, stream, mediaRec, chunks = [], audioContext, analyser, dataArray, animationId;
+  const activityText = document.getElementById("activity-text");
+  const shuffleBtn = document.getElementById("shuffleBtn");
+  const bars = document.querySelectorAll(".bar");
 
+  // --- 🎙️ AI Voice Logic (Only on user request) ---
+  function playAIVoice(text) {
+    window.speechSynthesis.cancel();
+    const speech = new SpeechSynthesisUtterance("Your challenge is: " + text);
+    const voices = window.speechSynthesis.getVoices();
+    // Try to find a female sounding voice
+    const femaleVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha'));
+    if (femaleVoice) speech.voice = femaleVoice;
+    speech.pitch = 1.1;
+    speech.rate = 0.9;
+    window.speechSynthesis.speak(speech);
+  }
+
+  document.getElementById("speakBtn").onclick = () => {
+    playAIVoice(activityText.textContent);
+  };
+
+  // --- 🎲 Activity Logic ---
+  function setRandomActivity() {
+    activityText.style.opacity = 0;
+    setTimeout(() => {
+      activityText.textContent = activities[Math.floor(Math.random() * activities.length)];
+      activityText.style.opacity = 1;
+    }, 200);
+  }
+  shuffleBtn.onclick = setRandomActivity;
+  setRandomActivity();
+
+  // --- 🎤 Mike Visualizer ---
+  function startVisualizer(stream) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.fftSize = 32;
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function draw() {
+      animationId = requestAnimationFrame(draw);
+      analyser.getByteFrequencyData(dataArray);
+      bars.forEach((bar, i) => {
+        let val = dataArray[i] / 2;
+        bar.style.height = Math.max(5, val) + "px";
+        bar.style.backgroundColor = `hsl(${220 + val}, 80%, 60%)`;
+      });
+    }
+    draw();
+  }
+
+  // --- 📹 Camera Init ---
   async function init() {
     try {
       stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      preview.srcObject = stream;
-      startBtn.disabled = false;
-      document.getElementById("pre-status").textContent = "Ready to Glow! ✨";
-    } catch (e) { document.getElementById("pre-status").textContent = "Camera error ❌"; }
+      document.getElementById("preview").srcObject = stream;
+      document.getElementById("startBtn").disabled = false;
+      document.getElementById("pre-status").textContent = "Camera Ready! ";
+      startVisualizer(stream);
+    } catch (e) {
+      document.getElementById("pre-status").textContent = "Camera error! Please allow access. ❌";
+    }
   }
 
-  startBtn.onclick = () => {
+  // --- ⏺ Recording Logic ---
+  document.getElementById("startBtn").onclick = () => {
     chunks = [];
-    startGroup.style.display = "none";
-    progressWrap.style.display = "block";
-    viewfinder.classList.add("is-recording");
-    recBadge.classList.add("visible");
-
     mediaRec = new MediaRecorder(stream);
+    document.getElementById("start-group").style.display = "none";
+    document.getElementById("activityBox").style.opacity = "0.5";
+    document.getElementById("recBadge").classList.add("visible");
+
     mediaRec.ondataavailable = e => chunks.push(e.data);
     mediaRec.onstop = () => {
       videoBlob = new Blob(chunks, { type: "video/webm" });
       document.getElementById("playback").src = URL.createObjectURL(videoBlob);
-      playbackWrap.style.display = "block";
-      viewfinder.style.display = "none";
-      progressWrap.style.display = "none";
+      document.getElementById("playback-wrap").style.display = "block";
+      document.getElementById("viewfinder").style.display = "none";
+      document.getElementById("activityBox").style.display = "none";
+      document.getElementById("visualizer").style.display = "none";
+      cancelAnimationFrame(animationId);
     };
-    mediaRec.start();
 
-    let rem = DURATION;
-    countdownEl.classList.add("visible");
-    countdownEl.textContent = rem;
+    mediaRec.start();
+    let rem = 5;
+    const overlay = document.getElementById("countdown-overlay");
+    overlay.classList.add("visible");
+    overlay.textContent = rem;
 
     const timer = setInterval(() => {
       rem--;
-      countdownEl.textContent = rem > 0 ? rem : "";
-      progressBar.style.width = ((DURATION - rem) / DURATION * 100) + "%";
+      overlay.textContent = rem > 0 ? rem : "";
       if(rem <= 0) {
         clearInterval(timer);
         mediaRec.stop();
-        countdownEl.classList.remove("visible");
-        viewfinder.classList.remove("is-recording");
+        overlay.classList.remove("visible");
       }
     }, 1000);
   };
 
-  document.getElementById("retryBtn").onclick = () => location.reload();
-
+  // --- 🚀 Upload Logic ---
   document.getElementById("submitBtn").onclick = async () => {
-    uploadStatus.textContent = "Uploading Magic... ✨";
+    const status = document.getElementById("uploadStatus");
+    status.textContent = "Uploading... ";
+    if (!videoBlob) return alert("No video recorded!");
+
     const form = new FormData();
-    form.append("video", videoBlob, "vid.webm");
+    form.append("video", videoBlob, "capture.webm");
+
     try {
       const res = await fetch("/upload-video", { method: "POST", body: form });
-      if(res.ok) {
-        uploadStatus.textContent = "Sent Successfully! ✅";
-        setTimeout(() => window.location.href="/audio-letters", 1000);
+      const data = await res.json();
+      if(data.ok) {
+        status.textContent = "Success! ✅";
+        setTimeout(() => window.location.href = "/audio-letters", 1000);
+      } else {
+        status.textContent = "Error from server! ❌";
       }
-    } catch(e) { uploadStatus.textContent = "Error! ❌"; }
+    } catch(e) {
+      status.textContent = "Network Error! ❌";
+    }
   };
 
   init();

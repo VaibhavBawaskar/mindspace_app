@@ -54,9 +54,48 @@
     .record-zone.recording { border-color: var(--red); background: #fff1f2; }
     .record-zone.done-zone { border-color: var(--green); background: #f0fdf4; }
 
-    .mic-icon { font-size: 2.5rem; margin-bottom: .5rem; transition: transform .2s; }
-    .recording .mic-icon { transform: scale(1.1); animation: pulse 1.5s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    /* --- PULSING MICROPHONE CSS --- */
+    .mic-container {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mic-icon {
+      font-size: 2.5rem;
+      position: relative;
+      z-index: 2;
+      transition: transform .2s;
+    }
+
+    .pulse-ring {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      background-color: rgba(239, 68, 68, 0.4);
+      border-radius: 50%;
+      z-index: 1;
+      display: none;
+    }
+
+    .recording .pulse-ring {
+      display: block;
+      animation: ripple 1.5s infinite ease-out;
+    }
+
+    .recording .mic-icon {
+      transform: scale(1.15);
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 0.8; }
+      100% { transform: scale(2.5); opacity: 0; }
+    }
+    /* --- END PULSING MICROPHONE CSS --- */
 
     .rec-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: .4rem; }
     .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); display: none; }
@@ -107,7 +146,11 @@
   </div>
 
   <div class="record-zone" id="recordZone">
-    <div class="mic-icon">🎤</div>
+    <div class="mic-container">
+      <div class="pulse-ring"></div>
+      <div class="mic-icon">🎤</div>
+    </div>
+
     <div class="rec-label">
       <span class="rec-dot"></span>
       <span id="recLabelText">Ready to record</span>
@@ -172,7 +215,7 @@
     speechRec = new SR();
     speechRec.continuous = true;
     speechRec.interimResults = true;
-    speechRec.lang = "en-US"; // Changed to English
+    speechRec.lang = "en-US";
 
     transcriptPh.style.display = "none";
     transcriptTxt.style.display = "inline";
@@ -196,7 +239,6 @@
       alert("Microphone access denied! Please check your settings."); return;
     }
 
-    // UI State Change
     startBtnGroup.classList.replace("d-flex", "d-none");
     recordingBtnGroup.classList.replace("d-none", "d-flex");
     postBtns.classList.add("d-none");
@@ -238,7 +280,6 @@
   }
 
   function onRecordingStop() {
-    // Only switch to Finish UI if we are actually stopping (not restarting)
     if (recordZone.classList.contains("recording")) {
         audioBlob = new Blob(chunks, { type: 'audio/webm' });
         recordZone.classList.remove("recording");
@@ -251,20 +292,12 @@
   }
 
   function restartRecording() {
-    // Stop everything
-    if (mediaRec && mediaRec.state !== "inactive") mediaRec.stop();
-    if (speechRec) try { speechRec.stop(); } catch(e){}
-    clearInterval(timerInterval);
-    clearInterval(progInterval);
-    if (stream) stream.getTracks().forEach(t => t.stop());
-
-    // Reset UI and immediately start again
+    stopRecording();
     recordZone.classList.remove("recording", "done-zone");
     timerDisp.textContent = "00:00";
     progBar.style.width = "0%";
     transcript = "";
     transcriptTxt.textContent = "";
-
     startRecording();
   }
 
@@ -274,11 +307,9 @@
     recLabelText.textContent = "Ready to record";
     timerDisp.textContent = "00:00";
     progBar.style.width = "0%";
-
     postBtns.classList.replace("d-flex", "d-none");
     recordingBtnGroup.classList.add("d-none");
     startBtnGroup.classList.replace("d-none", "d-flex");
-
     transcript = "";
     transcriptTxt.textContent = "";
     transcriptPh.style.display = "inline";
@@ -290,12 +321,10 @@
     submitBtn.disabled = true;
     retryBtn.disabled = true;
     uploadStatus.innerHTML = "<span style='color:var(--accent)'>⏳ Uploading Audio...</span>";
-
     const form = new FormData();
     form.append("audio", audioBlob, "scenario.webm");
     form.append("transcript", transcript.trim());
     form.append("scenario_id", document.getElementById("scenarioId").value);
-
     try {
       const res = await fetch("/upload-audio-scenario", { method: "POST", body: form });
       const data = await res.json();
@@ -320,6 +349,7 @@
   retryBtn.addEventListener("click", resetToInitial);
   submitBtn.addEventListener("click", uploadScenario);
 </script>
+{% include 'chat_bot.html' %}
 
 </body>
 </html>

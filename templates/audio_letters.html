@@ -11,17 +11,48 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* बदललेले रंग - White/Grey Theme */
-      --bg: #f8fafc;           /* अतिशय फिकट राखाडी (Light Grey) */
-      --surface: #ffffff;      /* शुद्ध पांढरा (White) */
-      --border: #e2e8f0;       /* फिकट बॉर्डर */
-      --accent: #6366f1;       /* जांभळा हायलाईट */
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --accent: #6366f1;
       --accent-glow: rgba(99,102,241,0.15);
-      --text: #1e293b;         /* गडद मजकूर (Dark Text) */
-      --muted: #64748b;        /* फिकट मजकूर */
-      --green: #10b981;        /* हिरवा रंग */
+      --text: #1e293b;
+      --muted: #64748b;
+      --green: #10b981;
+      --danger: #ef4444;
     }
 
+   .visualizer-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 80px;
+  position: relative; /* रेघ ठेवण्यासाठी आवश्यक */
+}
+
+/* मध्यभागी असलेली पांढरी/निळी रेघ */
+.visualizer-container::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: rgba(99, 102, 241, 0.4); /* फिकट निळा रंग */
+  box-shadow: 0 0 5px rgba(99, 102, 241, 0.8);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.bar {
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(to bottom, #6366f1, #a855f7);
+  border-radius: 10px;
+  transition: height 0.05s ease;
+  position: relative;
+  z-index: 2; /* रेघेच्या वर दिसण्यासाठी */
+}
     body {
       background: var(--bg);
       color: var(--text);
@@ -29,20 +60,14 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      overflow-x: hidden;
-      overflow-y: auto;
+      font-family: 'Segoe UI', Roboto, sans-serif;
       padding: 40px 0;
     }
 
-    /* हलकी ग्रीड डिझाइन */
     body::before {
       content: '';
       position: fixed; inset: 0;
-      background-image:
-        linear-gradient(rgba(99,102,241,.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(99,102,241,.03) 1px, transparent 1px);
+      background-image: linear-gradient(rgba(99,102,241,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,.03) 1px, transparent 1px);
       background-size: 40px 40px;
       pointer-events: none;
     }
@@ -58,25 +83,16 @@
     .header h2 { font-size: 1.25rem; font-weight: 700; color: #0f172a; }
     .header p  { font-size: .875rem; color: var(--muted); margin-top: .35rem; }
 
-    /* Recording Badge */
     .rec-badge {
       display: flex; align-items: center; gap: .4rem;
       font-size: .75rem; font-weight: 700;
       text-transform: uppercase;
       padding: .4rem 1rem; border-radius: 999px;
       border: 1px solid var(--border);
-      background: #fff;
-      color: var(--muted);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      background: #fff; color: var(--muted);
     }
-    .rec-badge.live {
-      color: #dc2626; border-color: #fecaca;
-      background: #fef2f2;
-    }
-    .rec-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: #dc2626; opacity: 0;
-    }
+    .rec-badge.live { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+    .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #dc2626; opacity: 0; }
     .rec-badge.live .rec-dot { opacity: 1; animation: blink 1s infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
@@ -105,16 +121,12 @@
       font-family: 'Noto Sans Devanagari', serif;
       font-size: 5.5rem; font-weight: 700;
       color: var(--text);
-      /* पांढऱ्या बॅकग्राउंडवर उठून दिसण्यासाठी सावली */
-      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
-      transition: all .42s cubic-bezier(.4,0,.2,1);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+      transition: all .4s cubic-bezier(.4,0,.2,1);
+      z-index: 2;
     }
-    .letter-card.active {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px var(--accent-glow), 0 20px 25px -5px rgba(0,0,0,0.1);
-    }
+    .letter-card.active { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
 
-    /* ... बाकीचे ॲनिमेशन (enter/exit) तसेच राहतील ... */
     .letter-card.enter-from-right { transform: translateX(120%) scale(.85); opacity: 0; }
     .letter-card.center { transform: translateX(0) scale(1); opacity: 1; }
     .letter-card.exit-to-left { transform: translateX(-120%) scale(.85); opacity: 0; }
@@ -125,327 +137,263 @@
     }
     .ring-wrap svg { transform: rotate(-90deg); }
     #ringTrack { stroke: #e2e8f0; }
-    #ringFill  { stroke: var(--accent); stroke-dasharray: 502; stroke-dashoffset: 502; }
+    #ringFill  { stroke: var(--accent); stroke-dasharray: 502; stroke-dashoffset: 502; transition: stroke-dashoffset 0.1s linear; }
 
     .dots { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: center; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #cbd5e1; transition: 0.3s; }
     .dot.done { background: var(--green); }
     .dot.active { background: var(--accent); transform: scale(1.3); }
 
     .counter { font-size: .85rem; font-weight: 600; color: var(--muted); }
 
-    .btn-start {
-      background: var(--accent); border: none; color: #fff;
+    .btn-start, .btn-stop, .btn-upload {
       font-weight: 700; font-size: 1rem;
       padding: .8rem 3.5rem; border-radius: .75rem; cursor: pointer;
-      box-shadow: 0 4px 6px -1px rgba(99,102,241, 0.4);
+      border: none; transition: 0.2s;
     }
+    .btn-start { background: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(99,102,241, 0.3); }
+    .btn-stop { background: var(--danger); color: #fff; display: none; }
+    .btn-upload { background: #059669; color: #fff; width: 100%; margin-top: 10px; }
+
     .instruction {
       text-align: center; font-size: .85rem; color: var(--muted);
       border: 1px solid var(--border); border-radius: .75rem;
       padding: .8rem; background: #fff; width: 100%;
     }
-    /* ── Upload & Done Section Design ── */
+
     #doneSection {
-      display: none; /* सुरुवातीला लपवलेले */
-      width: 100%;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;
-      margin-top: 10px;
-      padding: 1.5rem;
-      background: #f1f5f9; /* हलका राखाडी बॉक्स */
-      border-radius: 1rem;
-      border: 1px dashed #cbd5e1;
+      display: none; width: 100%; flex-direction: column; align-items: center;
+      gap: 1rem; padding: 1.5rem; background: #f1f5f9; border-radius: 1rem; border: 1px dashed #cbd5e1;
     }
-
-    .done-banner {
-      background: #dcfce7; /* फिकट हिरवा */
-      border: 1px solid #86efac;
-      border-radius: .75rem;
-      padding: .75rem 1.5rem;
-      text-align: center;
-      color: #166534; /* गडद हिरवा मजकूर */
-      font-weight: 700;
-      font-size: 0.95rem;
-      width: 100%;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .btn-upload {
-      background: #059669; /* मुख्य हिरवा रंग */
-      border: none;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 1rem;
-      padding: 0.9rem 3rem;
-      border-radius: .75rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); /* हिरवी सावली */
-      width: 100%;
-      max-width: 280px;
-    }
-
-    .btn-upload:hover {
-      background: #047857;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(5, 150, 105, 0.4);
-    }
-
-    .btn-upload:active {
-      transform: translateY(0);
-    }
-
-    .btn-upload:disabled {
-      background: #94a3b8;
-      cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
-    }
-
-    .upload-status {
-      font-size: .85rem;
-      color: #475569;
-      font-weight: 500;
-      text-align: center;
-    }
+    .done-banner { background: #dcfce7; border: 1px solid #86efac; border-radius: .75rem; padding: .75rem; text-align: center; color: #166534; font-weight: 700; width: 100%; }
   </style>
+  {% include 'chat_bot.html' %}
 </head>
 <body>
-<div class="wrap">
 
+<div class="wrap">
   <div class="header">
     <h2>🎙️ Read Each Letter</h2>
-    <p>Letters appear one by one. Speak each one clearly as it slides in.</p>
+    <p>Speak each letter clearly as it appears.</p>
   </div>
 
-  <!-- REC badge -->
   <div class="rec-badge" id="recBadge">
     <span class="rec-dot"></span> Recording
   </div>
 
-  <!-- Stage -->
-  <div class="stage" id="stage">
-    <!-- Ghost strip (all letters very faint in background) -->
-    <div class="ghost-strip">
-      अ इ उ ए ओ अं अः ट श ष स च य र ल थ व ड ञ द ण न म ह ख
-    </div>
-
-    <!-- Ring progress -->
+  <div class="stage">
+    <div class="ghost-strip">अ इ उ ए ओ अं अः ट श ष स च य र ल थ व ड ञ द ण न म ह ख</div>
     <div class="ring-wrap">
-      <svg width="184" height="184" viewBox="0 0 184 184" fill="none">
+      <svg width="184" height="184" viewBox="0 0 184 184">
         <circle id="ringTrack" cx="92" cy="92" r="80" stroke-width="3" fill="none"/>
-        <circle id="ringFill"  cx="92" cy="92" r="80" stroke-width="3" fill="none"
-                stroke-linecap="round"/>
+        <circle id="ringFill"  cx="92" cy="92" r="80" stroke-width="3" fill="none" stroke-linecap="round"/>
       </svg>
     </div>
-
-    <!-- Letter card (single, reused with animation) -->
     <div class="letter-card enter-from-right" id="letterCard">—</div>
   </div>
 
-  <!-- Dot progress -->
   <div class="dots" id="dots"></div>
+  <div class="counter" id="counter">0 / 25</div>
 
-  <!-- Counter -->
-  <div class="counter" id="counter">— / 25</div>
-
-  <!-- Instruction -->
   <div class="instruction" id="instruction">
-    Press <strong>Start</strong> to begin. Letters will slide in automatically every 2.5 seconds.
+    Please allow microphone access to start.
+  </div>
+  <div class="mic-section">
+    <div class="visualizer-container" id="visualizer">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
   </div>
 
-  <!-- Start button -->
-  <button class="btn-start" id="startBtn">▶ Start Recording</button>
+  <button class="btn-start" id="startBtn" disabled>▶ Start Recording</button>
+  <button class="btn-stop" id="stopBtn">🛑 Stop Recording</button>
 
-  <!-- Done banner + upload (hidden initially) -->
-  <div id="doneSection" style="display:none; width:100%; display:none; flex-direction:column; align-items:center; gap:.75rem;">
-    <div class="done-banner">✅ All 25 letters recorded!</div>
+  <div id="doneSection">
+    <div class="done-banner">✅ All letters recorded!</div>
     <button class="btn-upload" id="uploadBtn">Upload &amp; Continue →</button>
     <div class="upload-status" id="uploadStatus"></div>
   </div>
-
-</div><!-- /wrap -->
+</div>
 
 <script>
-  const LETTERS = [
-    "अ","इ","उ","ए","ओ",
-    "अं","अः","ट","श","ष",
-    "स","च","य","र","ल",
-    "थ","व","ड","ञ","द",
-    "ण","न","म","ह","ख"
-  ];
-  const SEC_PER_LETTER = 2.5;
-  const RING_CIRCUM    = 2 * Math.PI * 80;   // ≈ 502.65
+  const LETTERS = ["अ","इ","उ","ए","ओ","अं","अः","ट","श","ष","स","च","य","र","ल","थ","व","ड","ञ","द","ण","न","म","ह","ख"];
+const SEC_PER_LETTER = 4;
+const RING_CIRCUM = 2 * Math.PI * 80;
 
-  let stream      = null;
-  let mediaRec    = null;
-  let chunks      = [];
-  let audioBlob   = null;
-  let currentIdx  = -1;
-  let letterTimer = null;
-  let ringTimer   = null;
+let stream, mediaRec, chunks = [], audioBlob, currentIdx = -1, ringTimer;
+// नवीन व्हिज्युअलायझर व्हेरिएबल्स
+let audioCtx, analyser, dataArray, animationId;
 
-  const card         = document.getElementById("letterCard");
-  const recBadge     = document.getElementById("recBadge");
-  const ringFill     = document.getElementById("ringFill");
-  const dotsWrap     = document.getElementById("dots");
-  const counter      = document.getElementById("counter");
-  const instruction  = document.getElementById("instruction");
-  const startBtn     = document.getElementById("startBtn");
-  const doneSection  = document.getElementById("doneSection");
-  const uploadBtn    = document.getElementById("uploadBtn");
-  const uploadStatus = document.getElementById("uploadStatus");
+const card = document.getElementById("letterCard"),
+      recBadge = document.getElementById("recBadge"),
+      ringFill = document.getElementById("ringFill"),
+      dotsWrap = document.getElementById("dots"),
+      counter = document.getElementById("counter"),
+      instruction = document.getElementById("instruction"),
+      startBtn = document.getElementById("startBtn"),
+      stopBtn = document.getElementById("stopBtn"),
+      doneSection = document.getElementById("doneSection"),
+      uploadBtn = document.getElementById("uploadBtn"),
+      uploadStatus = document.getElementById("uploadStatus"),
+      bars = document.querySelectorAll(".bar");
 
-  // ── Build dots ────────────────────────────────────────
-  LETTERS.forEach((_, i) => {
-    const d = document.createElement("div");
-    d.className = "dot";
-    d.id = `dot-${i}`;
-    dotsWrap.appendChild(d);
+// Build dots
+LETTERS.forEach((_, i) => {
+  const d = document.createElement("div");
+  d.className = "dot";
+  d.id = `dot-${i}`;
+  dotsWrap.appendChild(d);
+});
+
+async function getMic() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    startBtn.disabled = false;
+    instruction.innerHTML = "Speak now. <strong>4s</strong> per character.";
+  } catch {
+    instruction.textContent = "⚠️ Microphone access denied.";
+  }
+}
+
+// --- 🎤 माईक इफेक्ट (Visualizer) चे फंक्शन ---
+// --- 🎤 FM Radio Wave Effect (Symmetric) ---
+function startVisualizer() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const source = audioCtx.createMediaStreamSource(stream);
+  analyser = audioCtx.createAnalyser();
+
+  // FM लहरींसाठी fftSize ६४ किंवा १२८ सर्वोत्तम असतो
+  analyser.fftSize = 64;
+  source.connect(analyser);
+
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  function draw() {
+    animationId = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(dataArray);
+
+    bars.forEach((bar, i) => {
+      // आवाजाची तीव्रता मॅप करणे (० ते ८०px च्या दरम्यान)
+      let val = (dataArray[i] / 255) * 80;
+
+      // FM रेडिओ लहरींसारखा इफेक्ट: दोन्ही बाजूला वाढणे
+      // CSS मध्ये 'align-items: center' असल्यामुळे हे शक्य होते
+      let finalHeight = Math.max(4, val * 1.5);
+
+      bar.style.height = finalHeight + "px";
+
+      // निऑन ग्लो इफेक्ट (आवाजाप्रमाणे चमक वाढवणे)
+      bar.style.opacity = Math.max(0.4, val / 40);
+      bar.style.boxShadow = `0 0 ${val/4}px rgba(99, 102, 241, 0.8)`;
+    });
+  }
+  draw();
+}
+
+function showLetter(index) {
+  if (index >= LETTERS.length) {
+    finishSession();
+    return;
+  }
+  currentIdx = index;
+  counter.textContent = `${index + 1} / ${LETTERS.length}`;
+
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.className = "dot" + (i < index ? " done" : i === index ? " active" : "");
   });
 
-  // ── Mic ───────────────────────────────────────────────
-  async function getMic() {
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      startBtn.disabled = false;
-    } catch {
-      instruction.textContent = "⚠️ Microphone access denied. Please allow it and reload.";
+  card.className = "letter-card exit-to-left";
+  setTimeout(() => {
+    card.style.transition = "none";
+    card.textContent = LETTERS[index];
+    card.className = "letter-card enter-from-right";
+    void card.offsetHeight;
+    card.style.transition = "";
+    card.className = "letter-card center active";
+  }, 400);
+
+  let start = Date.now();
+  clearInterval(ringTimer);
+  ringTimer = setInterval(() => {
+    let elapsed = Date.now() - start;
+    let progress = Math.min(1, elapsed / (SEC_PER_LETTER * 1000));
+    ringFill.style.strokeDashoffset = RING_CIRCUM * (1 - progress);
+    if (progress >= 1) {
+      clearInterval(ringTimer);
+      showLetter(index + 1);
     }
-  }
+  }, 50);
+}
 
-  // ── Start full session ────────────────────────────────
-  async function startSession() {
-    startBtn.disabled = true;
+async function startSession() {
+  startBtn.style.display = "none";
+  stopBtn.style.display = "block";
+  chunks = [];
 
-    // Start MediaRecorder
-    chunks = [];
-    const mime = ["audio/webm;codecs=opus","audio/webm","audio/ogg"]
-                   .find(m => MediaRecorder.isTypeSupported(m)) || "";
-    mediaRec = new MediaRecorder(stream, mime ? {mimeType: mime} : {});
-    mediaRec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
-    mediaRec.onstop = () => {
-      audioBlob = new Blob(chunks, { type: chunks[0]?.type || "audio/webm" });
-      showDone();
-    };
-    mediaRec.start(300);
+  // माईक व्हिज्युअलायझर सुरू करा
+  startVisualizer();
 
-    recBadge.classList.add("live");
-    instruction.textContent = "Speak each letter as it appears. Recording in progress…";
+  mediaRec = new MediaRecorder(stream);
+  mediaRec.ondataavailable = e => chunks.push(e.data);
+  mediaRec.onstop = () => {
+    audioBlob = new Blob(chunks, { type: 'audio/webm' });
+    doneSection.style.display = "flex";
+  };
+  mediaRec.start();
+  recBadge.classList.add("live");
+  instruction.textContent = "Recording... Speak clearly.";
+  showLetter(0);
+}
 
-    // Kick off letter sequence
-    showLetter(0);
-  }
+function finishSession() {
+  clearInterval(ringTimer);
+  // व्हिज्युअलायझर थांबवा
+  cancelAnimationFrame(animationId);
+  bars.forEach(bar => bar.style.height = "4px"); // बार्स रिसेट करा
 
-  // ── Show one letter with slide animation ─────────────
-  function showLetter(index) {
-    currentIdx = index;
+  if (mediaRec && mediaRec.state !== "inactive") mediaRec.stop();
+  stopBtn.style.display = "none";
+  recBadge.classList.remove("live");
+  card.textContent = "✓";
+  card.style.color = "#10b981";
+  instruction.textContent = "Recording Complete!";
+}
 
-    // Update dots
-    LETTERS.forEach((_, i) => {
-      const d = document.getElementById(`dot-${i}`);
-      d.className = "dot" + (i < index ? " done" : i === index ? " active" : "");
-    });
-    counter.textContent = `${index + 1} / ${LETTERS.length}`;
+startBtn.addEventListener("click", startSession);
+stopBtn.addEventListener("click", finishSession);
+getMic();
 
-    // ① Slide the OLD card out to the left
-    card.className = "letter-card exit-to-left";
-
-    setTimeout(() => {
-      // ② Instantly position new card off-screen right (no transition)
-      card.style.transition = "none";
-      card.textContent = LETTERS[index];
-      card.className   = "letter-card enter-from-right";
-
-      // Force reflow so the browser registers the starting position
-      void card.offsetHeight;
-
-      // ③ Transition back on
-      card.style.transition = "";
-      card.className = "letter-card center active";
-    }, 420);   // match exit transition duration
-
-    // ── Ring countdown ────────────────────────────────
-    clearInterval(ringTimer);
-    const totalMs = SEC_PER_LETTER * 1000;
-    const start   = Date.now();
-    ringFill.style.strokeDashoffset = RING_CIRCUM;
-
-    ringTimer = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(1, elapsed / totalMs);
-      ringFill.style.strokeDashoffset = RING_CIRCUM * (1 - progress);
-
-      if (progress >= 1) {
-        clearInterval(ringTimer);
-        advanceLetter();
-      }
-    }, 50);
-  }
-
-  function advanceLetter() {
-    clearInterval(ringTimer);
-    // Mark current dot done
-    const d = document.getElementById(`dot-${currentIdx}`);
-    if (d) d.className = "dot done";
-
-    const next = currentIdx + 1;
-    if (next < LETTERS.length) {
-      showLetter(next);
-    } else {
-      // All done — stop recording
-      card.className  = "letter-card center";
-      card.textContent = "✓";
-      card.style.color = "#34d399";
-      card.style.fontSize = "4rem";
-      recBadge.classList.remove("live");
-      ringFill.style.strokeDashoffset = 0;
-      counter.textContent = `${LETTERS.length} / ${LETTERS.length}`;
-      mediaRec.stop();
-    }
-  }
-
-  // ── Show done section ─────────────────────────────────
-  function showDone() {
-    instruction.textContent = "All done! Review and upload your recording.";
-    doneSection.style.display    = "flex";
-    doneSection.style.removeProperty("display");
-    doneSection.style.display    = "flex";
-  }
-
-  // ── Upload ────────────────────────────────────────────
   async function uploadAudio() {
-    uploadBtn.disabled      = true;
-    uploadStatus.textContent = "⏳ Uploading…";
-
+    uploadBtn.disabled = true;
+    uploadStatus.textContent = "⏳ Uploading...";
     const form = new FormData();
-    form.append("audio", audioBlob, "letters_all.webm");
+    form.append("audio", audioBlob, "letters.webm");
 
     try {
-      const res  = await fetch("/upload-audio-letters", { method: "POST", body: form });
-      const data = await res.json();
-      if (data.ok) {
-        uploadStatus.textContent = "✅ Recorded! Moving to next step…";
-        setTimeout(() => { window.location.href = "/audio-scenario"; }, 1400);
+      // Note: This endpoint must exist on your server
+      const res = await fetch("/upload-audio-letters", { method: "POST", body: form });
+      if (res.ok) {
+        uploadStatus.textContent = "✅ Uploaded Successfully!";
+        setTimeout(() => {
+          window.location.href = "/audio-scenario"; // इथे तुमच्या पुढच्या पेजचे नाव टाका
+        }, 1500);
       } else {
-        uploadStatus.textContent = "❌ " + (data.error || "Upload failed");
-        uploadBtn.disabled = false;
+        throw new Error();
       }
     } catch {
-      uploadStatus.textContent = "❌ Network error. Try again.";
+      uploadStatus.textContent = "❌ Upload failed. Check connection.";
       uploadBtn.disabled = false;
     }
   }
 
-  // ── Wire up ───────────────────────────────────────────
   startBtn.addEventListener("click", startSession);
+  stopBtn.addEventListener("click", finishSession);
   uploadBtn.addEventListener("click", uploadAudio);
-
-  // ── Boot ──────────────────────────────────────────────
-  startBtn.disabled = true;
   getMic();
 </script>
+
 </body>
 </html>
